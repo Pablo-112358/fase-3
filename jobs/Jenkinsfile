@@ -1,0 +1,24 @@
+pipeline {
+  agent any
+  
+  stages {
+    stage('Build') {
+      steps {
+        script {
+          docker.build('myapp')
+        }
+      }
+    }
+    
+    stage('Deploy') {
+      steps {
+        script {
+          def containerCount = 4
+          for (int i = 1; i <= containerCount; i++) {
+            docker.image('myapp').run("-d --name myapp-${i}")
+          }
+        }
+      }
+    }
+  }
+}
