@@ -1,7 +1,7 @@
 FROM ubuntu:22.04
 
 RUN apt update
-RUN apt upgrade
+RUN apt -y upgrade
 RUN apt -y install curl
 
 # Instalar OpenJDK 11
