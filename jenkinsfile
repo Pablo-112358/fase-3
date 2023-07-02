@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_IMAGE_TAG = 'latest'
+        EC2_INSTANCE_IP = 'xx.xx.xx.xx' // Reemplazar con la dirección IP de tu instancia EC2
+    }
+    
+    stages {
+        stage('Build') {
+            steps {
+                sh 'docker build -t tomcat-app:${DOCKER_IMAGE_TAG} .'
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                script {
+                    for (int i = 1; i <= 4; i++) {
+                        sh "docker run -d --name tomcat-server-${i} -p 808${i}:8080 tomcat-app:${DOCKER_IMAGE_TAG}"
+                    }
+                      
+                    // Esperar unos segundos para que los contenedores se inicien correctamente
+                    sleep 30
+                }
+            }
+        }
+        
+        stage('Verify') {
+            steps {
+                script {
+                    for (int i = 1; i <= 4; i++) {
+                        sh "curl http://${EC2_INSTANCE_IP}:808${i} -f"
+                    }
+                }
+            }
+        }
+        
+        stage('Cleanup') {
+            steps {
+                script {
+                    for (int i = 1; i <= 4; i++) {
+                        sh "docker stop tomcat-server-${i} && docker rm tomcat-server-${i}"
+                    }
+                }
+            }
+        }
+    }
+}
